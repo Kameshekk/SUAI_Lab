@@ -1,0 +1,56 @@
+#include <stdio.h> 
+#include <string.h> 
+#include <malloc.h> 
+#include <stdlib.h> 
+#define MAXLEN 1000 // максимальная длина строки 
+void main()
+{
+	FILE *fpin; // входной файл  
+	FILE *fpout;  // выходной файл  
+	char *lines_ptr = NULL;  // указатель на динамический массив  
+	char c;
+	int npointers, len = 0;    // число указателей в динамическом массиве  
+	int i, n = 0, flag = 0;
+	fopen_s(&fpin, "test.txt", "rt"); // открыть файл для чтения  
+	if (fpin == NULL)
+		return;    // ошибка при открытии файла 
+	fopen_s(&fpout, "result.txt", "wt"); // открыть файл для записи  
+	if (fpout == NULL)
+		return;    // ошибка при открытии файла 
+	lines_ptr = (char*)malloc(MAXLEN * sizeof(char));// заказать динамический массив указателей  
+	memset(lines_ptr, 0, MAXLEN * sizeof(char));	// обнулить массив указателей  
+	npointers = MAXLEN;
+	fseek(fpin, 0, SEEK_END);
+	n = ftell(fpin);
+	for (i = 0; i < n + 1; i++) // цикл до конца входного файла  
+	{
+		fseek(fpin, -1 - i, SEEK_END);
+		c = fgetc(fpin);
+		if (len == npointers)	// динамический массив исчерпан
+		{
+			npointers += MAXLEN;// увеличить число указателей в массиве
+			lines_ptr = (char*)realloc(lines_ptr, npointers * sizeof(char));   // перезаказать память для массива указателей
+			memset(lines_ptr, 0, MAXLEN * sizeof(char));	 // обнулить новую часть массива указателей
+		}
+		if ((c == 10) || i == n)
+		{
+			if (flag == 0)
+			{
+				for (; len > 0; len--)
+					fputc(lines_ptr[len - 1], fpout);
+				fprintf(fpout, "\n");
+				flag = 1;
+			}
+		}
+		else
+		{
+			lines_ptr[len] = c;
+			len++;
+			flag = 0;
+		}
+	}
+	if (lines_ptr != NULL)// отказаться от динамического массива указателей  
+		free(lines_ptr);
+	fclose(fpin);  // закрыть входной файл 
+	fclose(fpout); // закрыть выходной файл
+}
