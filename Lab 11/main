@@ -1,0 +1,50 @@
+#include <stdio.h> 
+#include <locale.h>
+#include <windows.h>
+#include <conio.h> 
+#define MAXLINE 1024 
+void main(void)
+{
+	HANDLE hStdout;
+	FILE *fpin;   // входной файл 
+	char line[MAXLINE]; // текущая строка  
+	char *ptr;
+	int flag = 0, comment = 0;
+	WORD foregroundColor;
+	WORD backgroundColor; // цвет фона  
+	WORD textAttribute;  // атрибут текста - цвет символа и фона 
+	hStdout = GetStdHandle(STD_OUTPUT_HANDLE); // Получить стандартный дескриптор   
+	foregroundColor = FOREGROUND_INTENSITY | FOREGROUND_BLUE;
+	backgroundColor = 0;
+	SetConsoleTextAttribute(hStdout, foregroundColor | backgroundColor);
+	textAttribute = foregroundColor | backgroundColor;
+	setlocale(LC_ALL, "Rus");
+	fopen_s(&fpin, "test.txt", "rt"); // открыть файл для чтения  
+	if (fpin == NULL)
+		return;    // ошибка при открытии файла 
+	while (!feof(fpin))// цикл до конца входного файла
+	{
+		ptr = fgets(line, MAXLINE, fpin); // чтение строки 
+		if (ptr == NULL)
+			break; // файл исчерпан 
+		if (*ptr == '#')
+			flag = 1;
+		if ((comment == 0) && (flag == 1))
+			SetConsoleTextAttribute(hStdout, textAttribute);
+		while (*ptr != '\0')
+		{
+			if ((*ptr == '/') && (*(ptr + 1) == '*'))
+				comment = 1;
+			if ((*ptr == '*') && (*(ptr + 1) == '/'))
+				comment = 0;
+			if ((*ptr == '\n') || ((*ptr == '/') && (*(ptr + 1) == '/')))
+				flag = 0;
+			if ((flag == 0) || (comment == 1))
+				SetConsoleTextAttribute(hStdout, 7);
+			printf("%c", *ptr);
+			ptr++;
+		}
+	}
+	fclose(fpin); // закрыть входной файл
+	_getch();
+}
